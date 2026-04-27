@@ -1,6 +1,4 @@
-# Author: Student 4
-# Module: Schedule
-# Description: Registers Meeting model in Django admin.
+#Registers Meeting model in Django admin.
 
 from django.contrib import admin
 from .models import Meeting

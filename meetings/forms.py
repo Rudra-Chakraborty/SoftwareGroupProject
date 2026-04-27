@@ -1,7 +1,4 @@
-
-   # Author: Student 4
-# Module: Schedule
-# Description: Form for creating and editing meetings.
+# Form for creating and editing meetings.
 
 from django import forms
 from .models import Meeting

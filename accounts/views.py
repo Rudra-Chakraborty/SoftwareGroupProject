@@ -1,5 +1,4 @@
-# Author: Student 4 (shared group component)
-# Description: User registration view.
+# User registration view.
 
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm

@@ -1,6 +1,5 @@
-# Author: Student 4
-# Module: Schedule
-# Description: Database model for the meeting scheduling feature.
+# Models for the schedule module
+# Defines the Meeting model and platform options
 from django.db import models
 from django.contrib.auth.models import User
 PLATFORM_CHOICES = [
@@ -18,8 +17,6 @@ class Meeting(models.Model):
         related_name='organised_meetings'
     )
     
-    # INTEGRATION NOTE: Replace this with a ForeignKey to Student 1's
-    # Team model after Friday's group meeting.
     team_name = models.CharField(max_length=100, blank=True, default='')
     
     date = models.DateField()

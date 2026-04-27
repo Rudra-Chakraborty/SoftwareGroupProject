@@ -86,7 +86,7 @@ document.querySelectorAll('.day-events').forEach(container => {
     const events = meetingsData[date] || [];
     events.slice(0, 3).forEach(ev => {
         const a = document.createElement('a');
-        a.href = `/schedule/${ev.id}/`;
+        a.href = `/meetings/${ev.id}/`;
         a.className = 'cal-event';
         a.textContent = `${ev.time} ${ev.title}`;
         container.appendChild(a);

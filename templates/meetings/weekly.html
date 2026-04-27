@@ -73,7 +73,7 @@ document.querySelectorAll('.day-events').forEach(container => {
     }
     events.forEach(ev => {
         const a = document.createElement('a');
-        a.href = `/schedule/${ev.id}/`;
+        a.href = `/meetings/${ev.id}/`;
         a.className = 'cal-event mb-1 d-block';
         a.textContent = `${ev.time} ${ev.title}`;
         container.appendChild(a);

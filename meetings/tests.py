@@ -1,6 +1,4 @@
-# Author: Student 4
-# Module: Schedule
-# Description: Tests for the meetings/schedule module.
+# Tests for the meetings/schedule module.
 
 from django.test import TestCase, Client
 from django.contrib.auth.models import User

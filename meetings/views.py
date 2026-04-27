@@ -1,7 +1,5 @@
-# Author: Student 4
-# Module: Schedule
-# Description: Views for monthly calendar, weekly view, upcoming meetings,
-#              and create/edit/delete operations on meetings.
+# Views for the schedule module
+# It will handles calendar views, upcoming meetings, and meeting CRUD operations
 
 import calendar
 from datetime import date, timedelta
@@ -13,6 +11,8 @@ from django.utils import timezone
 
 from .forms import MeetingForm
 from .models import Meeting
+
+# Shows all meetings from today onwards
 @login_required
 def upcoming_view(request):
     today = timezone.now().date()
@@ -21,6 +21,8 @@ def upcoming_view(request):
         'meetings': meetings,
         'today': today,
     })
+    
+# Displays a full monthly calendar
 @login_required
 def monthly_view(request):
     today = timezone.now().date()
@@ -62,7 +64,7 @@ def monthly_view(request):
     }
     return render(request, 'meetings/monthly.html', context)
 
-    
+# Shows a 7-day weekly view   
 @login_required
 def weekly_view(request):
     today = timezone.now().date()
@@ -97,6 +99,8 @@ def weekly_view(request):
         'week_end': week_dates[-1],
     }
     return render(request, 'meetings/weekly.html', context)
+
+# Handles creating a new meeting 
 @login_required
 def create_meeting(request):
     if request.method == 'POST':
@@ -113,6 +117,9 @@ def create_meeting(request):
         'form': form,
         'action': 'Schedule',
     })
+    
+    
+# Allows editting for meetings
 @login_required
     
 def edit_meeting(request, pk):
@@ -136,7 +143,7 @@ def edit_meeting(request, pk):
         'meeting': meeting,
     })
 
-
+# Allows deleting for meetings
 @login_required
 def delete_meeting(request, pk):
     meeting = get_object_or_404(Meeting, pk=pk)
@@ -151,6 +158,7 @@ def delete_meeting(request, pk):
 
     return render(request, 'meetings/confirm_delete.html', {'meeting': meeting})
 
+# Shows full details of a single meeting
 @login_required
 def meeting_detail(request, pk):
     meeting = get_object_or_404(Meeting, pk=pk)
