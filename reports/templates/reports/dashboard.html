@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports – Sky Track{% endblock %}
+{% block header %}Reports &amp; Analytics{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<style>
+  .stat-card{border-radius:16px;box-shadow:0 4px 10px rgba(0,0,0,0.1);padding:1.3rem;background:#fff;border-left:5px solid transparent;transition:transform .2s;}
+  .stat-card:hover{transform:translateY(-3px);}
+  .stat-card.blue{border-color:#2989fe;}.stat-card.orange{border-color:rgb(255,106,0);}
+  .stat-card.green{border-color:rgb(210,235,49);}.stat-card.red{border-color:rgb(238,90,115);}
+  .stat-card .stat-value{font-size:2rem;font-weight:700;color:#111;}
+  .stat-card .stat-label{color:#6b7280;font-size:.82rem;}
+  .stat-card .stat-icon{font-size:1.8rem;opacity:.18;}
+  .section-title{font-weight:700;font-size:1rem;color:#1e429f;margin-bottom:.75rem;}
+  .table thead th{background:#2989fe;color:#fff;font-weight:600;font-size:.85rem;border:none;}
+  .table tbody tr:hover{background:#eff6ff;}
+  .table td,.table th{vertical-align:middle;font-size:.88rem;}
+  .badge-no-mgr{background:#fee2e2;color:#c81e1e;font-size:.78rem;padding:.25em .65em;border-radius:6px;}
+  .badge-has-mgr{background:#d1fae5;color:#065f46;font-size:.78rem;padding:.25em .65em;border-radius:6px;}
+  .btn-pdf{background:rgb(238,90,115);color:#fff;border:none;border-radius:8px;}
+  .btn-pdf:hover{background:#c0392b;color:#fff;}
+  .btn-excel{background:rgb(0,150,100);color:#fff;border:none;border-radius:8px;}
+  .btn-excel:hover{background:#057a55;color:#fff;}
+  #toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;}
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Reports</h4>
+  <div class="d-flex gap-2">
+    <button class="btn btn-pdf btn-sm px-3" onclick="downloadReport('pdf')"><i class="bi bi-file-earmark-pdf me-1"></i>Export PDF</button>
+    <button class="btn btn-excel btn-sm px-3" onclick="downloadReport('excel')"><i class="bi bi-file-earmark-excel me-1"></i>Export Excel</button>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3">
+    <div class="stat-card blue d-flex justify-content-between align-items-start">
+      <div><div class="stat-value" id="stat-depts">-</div><div class="stat-label">Departments</div></div>
+      <i class="bi bi-building stat-icon text-primary"></i>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card orange d-flex justify-content-between align-items-start">
+      <div><div class="stat-value" id="stat-teams">-</div><div class="stat-label">Total Teams</div></div>
+      <i class="bi bi-people-fill stat-icon" style="color:rgb(255,106,0)"></i>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card green d-flex justify-content-between align-items-start">
+      <div><div class="stat-value" id="stat-members">-</div><div class="stat-label">Total Members</div></div>
+      <i class="bi bi-person-badge stat-icon" style="color:rgb(150,180,0)"></i>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card red d-flex justify-content-between align-items-start">
+      <div><div class="stat-value" id="stat-nomanager">-</div><div class="stat-label">Inactive Teams</div></div>
+      <i class="bi bi-exclamation-triangle stat-icon" style="color:rgb(238,90,115)"></i>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-7">
+    <div class="card p-3 h-100">
+      <div class="section-title"><i class="bi bi-bar-chart me-2"></i>Teams per Department</div>
+      <canvas id="barChart" height="200"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card p-3 h-100">
+      <div class="section-title"><i class="bi bi-pie-chart me-2"></i>Active vs Inactive</div>
+      <canvas id="doughnutChart" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <div class="section-title"><i class="bi bi-table me-2"></i>Department Summary</div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Department</th><th>Leader</th><th class="text-center">Teams</th></tr></thead>
+          <tbody id="dept-tbody"><tr><td colspan="3" class="text-center text-muted py-3">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <div class="section-title" style="color:rgb(238,90,115)"><i class="bi bi-exclamation-triangle me-2"></i>Inactive Teams</div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Team</th><th>Department</th><th class="text-center">Members</th></tr></thead>
+          <tbody id="inactive-tbody"><tr><td colspan="3" class="text-center text-muted py-3">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card p-3 mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="section-title mb-0"><i class="bi bi-list-ul me-2"></i>All Teams</div>
+    <input type="search" id="team-search" class="form-control form-control-sm w-auto" placeholder="Search teams..." oninput="filterTeams(this.value)">
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Team Name</th><th>Department</th><th>Manager</th><th class="text-center">Members</th><th class="text-center">Active</th></tr></thead>
+      <tbody id="teams-tbody"><tr><td colspan="5" class="text-center text-muted py-3">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+  let allTeamsData=[];let barChartInst=null;let doughnutChartInst=null;
+  async function loadData(){
+    try{
+      const res=await fetch("{% url 'reports:chart_data' %}");
+      const d=await res.json();
+      animateCount('stat-depts',d.total_departments);
+      animateCount('stat-teams',d.total_teams);
+      animateCount('stat-members',d.total_members);
+      animateCount('stat-nomanager',d.no_manager_count);
+      renderBarChart(d);renderDoughnut(d);renderDeptTable(d);
+    }catch(e){showToast('Failed to load data','danger');}
+  }
+  function animateCount(id,target){
+    const el=document.getElementById(id);let current=0;
+    const step=Math.max(1,Math.ceil(target/30));
+    const t=setInterval(()=>{current=Math.min(current+step,target);el.textContent=current;if(current>=target)clearInterval(t);},40);
+  }
+  function renderBarChart(d){
+    if(barChartInst)barChartInst.destroy();
+    barChartInst=new Chart(document.getElementById('barChart'),{type:'bar',data:{labels:d.labels,datasets:[{label:'Teams',data:d.team_counts,backgroundColor:'#2989fe',borderRadius:6}]},options:{responsive:true,plugins:{legend:{position:'top'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1}}}}});
+  }
+  function renderDoughnut(d){
+    if(doughnutChartInst)doughnutChartInst.destroy();
+    doughnutChartInst=new Chart(document.getElementById('doughnutChart'),{type:'doughnut',data:{labels:['Active','Inactive'],datasets:[{data:[d.total_teams-d.no_manager_count,d.no_manager_count],backgroundColor:['#2989fe','rgb(238,90,115)'],hoverOffset:6}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+  }
+  function renderDeptTable(d){
+    document.getElementById('dept-tbody').innerHTML=d.labels.length
+      ?d.labels.map((l,i)=>'<tr><td class="fw-semibold">'+l+'</td><td>'+d.heads[i]+'</td><td class="text-center">'+d.team_counts[i]+'</td></tr>').join('')
+      :'<tr><td colspan="3" class="text-center text-muted py-3">No departments.</td></tr>';
+  }
+  function populateTeamsTable(){
+    const teams=[{% for team in all_teams %}{name:"{{ team.name|escapejs }}",dept:"{{ team.department.name|default:'N/A'|escapejs }}",manager:"{{ team.manager|default:'N/A'|escapejs }}",members:{{ team.members.count }},active:{{ team.is_active|yesno:"true,false" }}},{% endfor %}];
+    allTeamsData=teams;renderTeamsTable(teams);
+    const inactive=[{% for team in teams_without_managers %}{name:"{{ team.name|escapejs }}",dept:"{{ team.department.name|default:'N/A'|escapejs }}",members:{{ team.members.count }}},{% endfor %}];
+    document.getElementById('inactive-tbody').innerHTML=inactive.length
+      ?inactive.map(t=>'<tr><td class="fw-semibold">'+t.name+'</td><td>'+t.dept+'</td><td class="text-center">'+t.members+'</td></tr>').join('')
+      :'<tr><td colspan="3" class="text-center text-success py-3"><i class="bi bi-check-circle me-1"></i>All teams active.</td></tr>';
+  }
+  function renderTeamsTable(teams){
+    document.getElementById('teams-tbody').innerHTML=teams.length
+      ?teams.map(t=>'<tr><td class="fw-semibold">'+t.name+'</td><td>'+t.dept+'</td><td>'+t.manager+'</td><td class="text-center">'+t.members+'</td><td class="text-center">'+(t.active?'<span class="badge-has-mgr">Active</span>':'<span class="badge-no-mgr">Inactive</span>')+'</td></tr>').join('')
+      :'<tr><td colspan="5" class="text-center text-muted py-3">No teams found.</td></tr>';
+  }
+  function filterTeams(q){q=q.toLowerCase();renderTeamsTable(allTeamsData.filter(t=>t.name.toLowerCase().includes(q)||t.dept.toLowerCase().includes(q)||t.manager.toLowerCase().includes(q)));}
+  function downloadReport(type){
+    const urls={pdf:"{% url 'reports:generate_pdf' %}",excel:"{% url 'reports:generate_excel' %}"};
+    showToast('Generating '+type.toUpperCase()+'...','info');window.location.href=urls[type];
+  }
+  function showToast(msg,type){
+    const c={success:'#057a55',danger:'rgb(238,90,115)',info:'#2989fe'};
+    const el=document.createElement('div');
+    el.style.cssText='background:'+c[type]+';color:#fff;padding:.75rem 1.1rem;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-bottom:.5rem;font-size:.9rem;';
+    el.innerHTML='<i class="bi bi-info-circle me-2"></i>'+msg;
+    document.getElementById('toast-container').appendChild(el);setTimeout(()=>el.remove(),3500);
+  }
+  document.addEventListener('DOMContentLoaded',()=>{loadData();populateTeamsTable();});
+</script>
+{% endblock %}
