@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import User, Staff, Team, Department
+from .models import User, Staff, Team, Department, Message
 from django.contrib.auth.hashers import make_password, check_password
 
 
@@ -22,7 +22,9 @@ def login_view(request):
                 if check_password(password, user.password_hash):
 
                     request.session["user_email"] = user.email
-                    request.session["user_id"] = user.user_Id
+
+                    if user.role == "admin":
+                        return redirect("admin_dashboard")
 
                     return redirect("dashboard")
 
@@ -166,4 +168,61 @@ def department_view(request):
         "departments": departments,
         "staff": staff,
         "user_role": user.role
+    })
+    
+
+def inbox(request):
+    email = request.session.get("user_email")
+    if not email:
+        return redirect("login")
+    current_user = User.objects.get(email=email)
+    staff = Staff.objects.filter(user=current_user).first()
+    received_messages = Message.objects.filter(
+        receiver=current_user
+    ).order_by('-timestamp')
+    return render(request, 'inbox.html', {  # ← changed
+        'messages': received_messages,
+        'current_user': current_user,
+        'staff': staff,
+    })
+
+
+def outbox(request):
+    email = request.session.get("user_email")
+    if not email:
+        return redirect("login")
+    current_user = User.objects.get(email=email)
+    staff = Staff.objects.filter(user=current_user).first()
+    sent_messages = Message.objects.filter(
+        sender=current_user
+    ).order_by('-timestamp')
+    return render(request, 'outbox.html', {  # ← changed
+        'messages': sent_messages,
+        'current_user': current_user,
+        'staff': staff,
+    })
+
+
+def compose(request):
+    email = request.session.get("user_email")
+    if not email:
+        return redirect("login")
+    current_user = User.objects.get(email=email)
+    staff = Staff.objects.filter(user=current_user).first()
+    all_users = User.objects.exclude(user_Id=current_user.user_Id)
+    if request.method == 'POST':
+        receiver_id = request.POST.get('receiver')
+        content = request.POST.get('content')
+        if receiver_id and content:
+            receiver = User.objects.get(user_Id=receiver_id)
+            Message.objects.create(
+                sender=current_user,
+                receiver=receiver,
+                content=content
+            )
+            return redirect('outbox')
+    return render(request, 'compose.html', {  # ← changed
+        'all_users': all_users,
+        'current_user': current_user,
+        'staff': staff,
     })
