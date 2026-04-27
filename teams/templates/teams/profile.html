@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Profile | Sky Track{% endblock %}
+{% block header %}My Profile{% endblock %}
+
+{% block content %}
+<div class="rounded-pill bg-secondary bg-opacity-25 p-5 mb-4">
+  <strong>Profile</strong>
+  <div class="text-muted mt-1">Logged-in user details for the Sky Track application.</div>
+</div>
+
+<div class="card p-4">
+  <h4 class="fw-bold">{{ request.user.username }}</h4>
+  <p><strong>First name:</strong> {{ request.user.first_name|default:"Not set" }}</p>
+  <p><strong>Last name:</strong> {{ request.user.last_name|default:"Not set" }}</p>
+  <p><strong>Email:</strong> {{ request.user.email|default:"Not set" }}</p>
+      <p><strong>Mobile Number:</strong> 07123 456789</p>
+  <p><strong>Staff/Admin:</strong> {{ request.user.is_staff }}</p>
+</div>
+{% endblock %}

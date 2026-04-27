@@ -1,0 +1,21 @@
+from django.contrib import admin
+from django.urls import path, include
+from main import views as main_views
+from teams import views as team_views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+
+    # Uploaded group-project pages
+    path('', main_views.login_view, name='login'),
+    path('dashboard/', main_views.dashboard, name='dashboard'),
+    path('admin-dashboard/', main_views.admin_dashboard, name='admin_dashboard'),
+    path('profile/', main_views.profile_view, name='profile'),
+
+    # Student 1 pages
+    path('teams/', team_views.team_list, name='teams'),
+    path('teams/', include('teams.urls')),
+    path('departments/', team_views.department_list, name='departments'),
+    path('departments/<int:pk>/', team_views.department_detail, name='department_detail'),
+    path('dependencies/', team_views.dependency_list, name='dependencies'),
+]
