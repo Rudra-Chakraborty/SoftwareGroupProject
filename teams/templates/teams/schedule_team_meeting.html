@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Schedule Meeting{% endblock %}
+{% block nav_teams %}active{% endblock %}
+{% block header %}Schedule Meeting{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-7"><div class="card p-4">
+<h4 class="fw-bold">Schedule Meeting with {{ team.name }}</h4><p class="text-muted">Create a meeting linked to this engineering team.</p>
+<form method="post" novalidate>{% csrf_token %}
+{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+<div class="mb-3"><label class="form-label fw-semibold">Title</label>{{ form.title }}</div>
+<div class="row"><div class="col-md-4 mb-3"><label class="form-label fw-semibold">Date</label>{{ form.date }}</div><div class="col-md-4 mb-3"><label class="form-label fw-semibold">Start Time</label>{{ form.start_time }}</div><div class="col-md-4 mb-3"><label class="form-label fw-semibold">End Time</label>{{ form.end_time }}</div></div>
+<div class="mb-3"><label class="form-label fw-semibold">Platform</label>{{ form.platform }}</div>
+<div class="mb-3"><label class="form-label fw-semibold">Meeting Link</label>{{ form.meeting_link }}</div>
+<div class="mb-3"><label class="form-label fw-semibold">Agenda / Description</label>{{ form.description }}</div>
+<button type="submit" class="btn btn-sky"><i class="bi bi-calendar-plus"></i> Schedule Meeting</button> <a href="{% url 'teams:detail' team.pk %}" class="btn btn-outline-secondary">Cancel</a>
+</form></div></div></div>
+{% endblock %}
