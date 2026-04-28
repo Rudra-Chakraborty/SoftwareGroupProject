@@ -1,6 +1,6 @@
 # Author: Student 4
-# Module: Schedule
-# Description: Views for monthly calendar, weekly view, upcoming meetings,
+# Schedule
+# Views for monthly calendar, weekly view, upcoming meetings,
 # and create/edit/delete operations on meetings.
 
 import calendar
