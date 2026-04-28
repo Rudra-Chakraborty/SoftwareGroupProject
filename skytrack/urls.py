@@ -13,9 +13,9 @@ urlpatterns = [
     path('profile/', main_views.profile_view, name='profile'),
 
     # Student 1 pages
-    path('teams/', team_views.team_list, name='teams'),
-    path('teams/', include('teams.urls')),
+    path('teams/', include(('teams.urls', 'teams'))),
     path('departments/', team_views.department_list, name='departments'),
     path('departments/<int:pk>/', team_views.department_detail, name='department_detail'),
     path('dependencies/', team_views.dependency_list, name='dependencies'),
+    path('schedule/', include('meetings.urls', namespace='schedule')),
 ]

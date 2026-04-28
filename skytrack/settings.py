@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'main',
     'accounts',
     'teams',
+    'meetings', 
 ]
 
 MIDDLEWARE = [
