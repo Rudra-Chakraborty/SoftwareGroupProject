@@ -1,6 +1,6 @@
 # Author: Student 4
-# Module: Schedule
-# Description: URL routing for the schedule app.
+# Schedule
+# URL routing for the schedule app.
 
 from django.urls import path
 from . import views
