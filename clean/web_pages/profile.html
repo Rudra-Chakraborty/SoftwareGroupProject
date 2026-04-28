@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+{% block header %}My Profile{% endblock %}
+
+{% block content %}
+
+<style>
+
+
+.profile-container{
+  max-width:500px;
+  margin:auto;
+  background:white;
+  padding:25px;
+  border-radius:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+
+.form-group{
+  margin-bottom:15px;
+}
+
+</style>
+
+<div class="profile-container">
+
+  <h4 class="mb-4">My Profile</h4>
+
+  <form>
+  
+    <div class="form-group">
+      <label>First Name</label>
+      <input class="form-control" value="{{ staff.first_name }}" readonly>
+    </div>
+
+    <div class="form-group">
+      <label>Last Name</label>
+      <input class="form-control" value="{{ staff.last_name }}" readonly>
+    </div>
+
+    <div class="form-group">
+      <label>Phone Number</label>
+      <input class="form-control" value="{{ staff.phone_number|default:'Not set' }}" readonly>
+    </div>
+
+    <div class="form-group">
+      <label>Role</label>
+      <input class="form-control" value="{{ staff.staff_role|default:'Not set' }}" readonly>
+    </div>
+
+    <div class="form-group">
+      <label>Skill</label>
+      <input class="form-control" value="{{ staff.staff_skill|default:'Not set' }}" readonly>
+    </div>
+
+  </form>
+
+</div>
+
+{% endblock %}

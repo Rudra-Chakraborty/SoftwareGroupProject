@@ -1,0 +1,673 @@
+{% extends "base.html" %}
+{% block title %}Schedule{% endblock %}
+{% block header %}Schedule{% endblock %}
+
+{% block extra_css %}
+<style>
+
+.sched-page   { display:flex; flex-direction:column; gap:20px; }
+.sched-top    { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.sched-body   { display:grid; grid-template-columns:1fr 280px; gap:20px; align-items:start; }
+
+
+.action-group { display:flex; align-items:center; gap:0; background:#f4f4f8; border-radius:11px; padding:3px; }
+.view-btn {
+  background:none; border:none; cursor:pointer; border-radius:8px;
+  padding:7px 14px; font-size:.8rem; font-weight:600; color:#777;
+  display:inline-flex; align-items:center; gap:5px; transition:all .13s; white-space:nowrap;
+}
+.view-btn.active { background:#fff; color:#4f46e5; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+.view-btn:hover:not(.active) { color:#444; }
+.btn-divider { width:1px; height:22px; background:#e0e0e0; margin:0 2px; }
+.btn-new-meeting {
+  background:#4f46e5; color:#fff; border:none; border-radius:10px;
+  padding:9px 18px; font-size:.85rem; font-weight:700; cursor:pointer;
+  display:inline-flex; align-items:center; gap:7px; transition:background .13s; margin-left:8px;
+}
+.btn-new-meeting:hover { background:#4338ca; }
+
+
+.main-panel {
+  background:#fff; border-radius:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,.07); overflow:hidden; min-height:420px;
+}
+
+
+.day-hdr {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 20px 6px; font-size:.7rem; font-weight:700;
+  color:#aaa; text-transform:uppercase; letter-spacing:.07em;
+  background:#fff; border-bottom:1px solid #f6f6f6;
+}
+.day-hdr-line { flex:1; height:1px; background:#f0f0f0; }
+.today-badge {
+  background:#4f46e5; color:#fff; border-radius:20px;
+  padding:1px 8px; font-size:.63rem; font-weight:700;
+  text-transform:none; letter-spacing:0;
+}
+
+
+.meeting-row {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 20px; border-bottom:1px solid #f8f8f8;
+  transition:background .1s;
+}
+.meeting-row:hover { background:#fafafe; }
+.meeting-row:last-child { border-bottom:none; }
+
+
+.mr-date { flex-shrink:0; width:36px; text-align:center; }
+.mr-date .md-day { font-size:1.15rem; font-weight:900; color:#4f46e5; line-height:1; }
+.mr-date .md-mon { font-size:.58rem; font-weight:700; color:#bbb; text-transform:uppercase; }
+
+
+.mr-info { flex:1; min-width:0; cursor:pointer; }
+.mr-title { font-weight:700; font-size:.88rem; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mr-meta  { font-size:.71rem; color:#aaa; margin-top:2px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.mr-meta i { font-size:.65rem; }
+
+
+.plat-chip { font-size:.63rem; font-weight:700; padding:2px 7px; border-radius:20px; flex-shrink:0; white-space:nowrap; }
+.plat-zoom        { background:#dbeafe; color:#1d4ed8; }
+.plat-teams       { background:#ede9fe; color:#6d28d9; }
+.plat-slack       { background:#fef3c7; color:#92400e; }
+.plat-google_meet { background:#dcfce7; color:#166534; }
+.plat-in_person   { background:#fce7f3; color:#9d174d; }
+
+
+.mr-actions { display:flex; align-items:center; gap:5px; flex-shrink:0; }
+.mr-edit-btn, .mr-del-btn {
+  width:30px; height:30px; border-radius:8px; border:none;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:.78rem; font-weight:600; transition:all .13s;
+}
+.mr-edit-btn { background:#eef0ff; color:#4f46e5; }
+.mr-edit-btn:hover { background:#4f46e5; color:#fff; }
+.mr-del-btn  { background:#fff0f1; color:#e11d48; }
+.mr-del-btn:hover  { background:#e11d48; color:#fff; }
+
+
+.panel-nav {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 20px; border-bottom:1px solid #f4f4f4;
+}
+.panel-nav-title { font-weight:800; font-size:.93rem; color:#111; }
+.pnav-btn {
+  background:#f4f4f8; border:none; border-radius:8px; cursor:pointer;
+  color:#777; font-size:.8rem; transition:background .12s;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.pnav-btn:hover { background:#eaeaf0; color:#111; }
+.pnav-arr { width:30px; height:30px; }
+.pnav-today { padding:0 12px; height:30px; font-weight:600; }
+
+
+.week-scroll { overflow-x:auto; }
+.week-table  { display:grid; grid-template-columns:46px repeat(7,1fr); min-width:560px; }
+.wt-time-col { border-right:1px solid #f4f4f4; }
+.wt-time-hdr { height:52px; border-bottom:1px solid #f4f4f4; }
+.wt-time-slot { height:48px; font-size:.6rem; color:#ccc; font-weight:600; padding:3px 4px 0; border-bottom:1px solid #f8f8f8; }
+.wt-day-col  { border-right:1px solid #f4f4f4; position:relative; }
+.wt-day-col:last-child { border-right:none; }
+.wt-day-hdr  { height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border-bottom:1px solid #f4f4f4; }
+.wt-day-name { font-size:.62rem; color:#bbb; font-weight:700; text-transform:uppercase; }
+.wt-day-num  { font-size:.95rem; font-weight:800; color:#222; }
+.wt-day-hdr.is-today .wt-day-num { background:#4f46e5; color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.82rem; }
+.wt-slot     { height:48px; border-bottom:1px solid #f8f8f8; position:relative; cursor:pointer; }
+.wt-slot:hover { background:#fafafe; }
+.wt-event    {
+  position:absolute; left:2px; right:2px;
+  background:linear-gradient(135deg,#4f46e5,#7c3aed);
+  color:#fff; border-radius:5px; padding:2px 5px;
+  font-size:.6rem; font-weight:700; overflow:hidden;
+  cursor:pointer; z-index:2; white-space:nowrap; text-overflow:ellipsis;
+}
+.wt-event:hover { opacity:.82; }
+
+
+.month-wrap { padding:14px 16px 16px; }
+.month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:#efefef; border-radius:10px; overflow:hidden; }
+.mg-hdr  { background:#fafafa; text-align:center; padding:6px 0; font-size:.6rem; font-weight:700; color:#bbb; text-transform:uppercase; }
+.mg-cell { background:#fff; min-height:72px; padding:5px; cursor:pointer; transition:background .1s; }
+.mg-cell:hover { background:#fafafe; }
+.mg-cell.other-m { background:#fafafa; }
+.mg-cell.is-today { background:#f0efff; }
+.mg-date { font-size:.73rem; font-weight:700; color:#444; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%; margin-bottom:2px; }
+.mg-cell.is-today .mg-date { background:#4f46e5; color:#fff; }
+.mg-event {
+  margin-top:2px; background:#4f46e5; color:#fff;
+  border-radius:4px; padding:1px 4px; font-size:.58rem;
+  font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer;
+}
+.mg-event:hover { background:#4338ca; }
+.mg-more { font-size:.58rem; color:#bbb; margin-top:1px; }
+
+
+.empty-state { text-align:center; padding:60px 20px; }
+.empty-state i { font-size:2.4rem; color:#e0e0e0; display:block; margin-bottom:10px; }
+.empty-state p { color:#bbb; font-size:.88rem; }
+
+
+.mini-card { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.07); padding:16px; }
+.mini-nav  { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.mini-nav-title { font-weight:800; font-size:.88rem; color:#111; }
+.mini-nav-btn { background:none; border:none; cursor:pointer; color:#aaa; width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; transition:background .1s; }
+.mini-nav-btn:hover { background:#f0efff; color:#4f46e5; }
+.mini-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; }
+.mini-hdr  { text-align:center; font-size:.6rem; font-weight:700; color:#ccc; padding:3px 0 6px; text-transform:uppercase; }
+.mini-cell {
+  aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+  border-radius:7px; cursor:pointer; font-size:.76rem; font-weight:500;
+  color:#444; transition:background .1s; position:relative; user-select:none;
+}
+.mini-cell:hover { background:#f0efff; color:#4f46e5; }
+.mini-cell.other-m  { color:#ddd; }
+.mini-cell.is-today { background:#4f46e5; color:#fff; font-weight:800; }
+.mini-cell.is-today:hover { background:#4338ca; }
+.mini-cell.has-dot::after { content:''; position:absolute; bottom:3px; width:4px; height:4px; border-radius:50%; background:#e11d48; }
+.mini-cell.is-today.has-dot::after { background:#fff; }
+
+
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(10,10,20,.52);
+  z-index:2000; display:none; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open { display:flex; }
+.modal-box {
+  background:#fff; border-radius:18px; width:100%; max-width:510px;
+  max-height:90vh; overflow-y:auto; padding:26px 28px;
+  box-shadow:0 24px 64px rgba(0,0,0,.22);
+  animation:mUp .17s ease;
+}
+@keyframes mUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+.modal-hdr  { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.modal-title{ font-size:1.02rem; font-weight:800; color:#111; }
+.modal-close{ background:none; border:none; cursor:pointer; font-size:1.15rem; color:#bbb; }
+.modal-close:hover { color:#333; }
+.fg { margin-bottom:13px; }
+.fg label { font-size:.73rem; font-weight:700; color:#666; display:block; margin-bottom:4px; }
+.fg .form-control,.fg .form-select { border-radius:8px; border:1.5px solid #e6e6e6; font-size:.84rem; padding:8px 11px; width:100%; box-sizing:border-box; transition:border-color .12s; }
+.fg .form-control:focus,.fg .form-select:focus { border-color:#4f46e5; outline:none; box-shadow:0 0 0 3px rgba(79,70,229,.1); }
+.fg-row2 { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+.fg-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
+.err-msg { color:#e11d48; font-size:.7rem; margin-top:3px; }
+.modal-footer { display:flex; gap:9px; margin-top:20px; }
+.btn-save { background:#4f46e5; color:#fff; border:none; border-radius:9px; padding:10px 20px; font-weight:700; font-size:.87rem; cursor:pointer; flex:1; transition:background .12s; }
+.btn-save:hover { background:#4338ca; }
+.btn-cancel-m { background:#f3f3f7; color:#666; border:none; border-radius:9px; padding:10px 15px; font-weight:600; font-size:.87rem; cursor:pointer; }
+.btn-cancel-m:hover { background:#e8e8ee; }
+
+
+.del-modal-box { max-width:350px; text-align:center; }
+.del-icon  { font-size:2rem; color:#e11d48; display:block; margin-bottom:10px; }
+.del-modal-box h5 { font-weight:800; margin-bottom:6px; }
+.del-modal-box p  { color:#999; font-size:.84rem; }
+.btn-confirm-del { background:#e11d48; color:#fff; border:none; border-radius:9px; padding:10px 20px; font-weight:700; cursor:pointer; flex:1; transition:background .12s; }
+.btn-confirm-del:hover { background:#be1236; }
+
+@media(max-width:860px) { .sched-body { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<script>
+const ALL_MEETINGS = [{% for m in all_meetings %}{
+  id:{{m.pk}},
+  title:"{{m.title|escapejs}}",
+  date:"{{m.date|date:'Y-m-d'}}",
+  start:"{{m.start_time|time:'H:i'}}",
+  end:"{{m.end_time|time:'H:i'}}",
+  platform:"{{m.platform}}",
+  plat_label:"{{m.get_platform_display}}",
+  team:"{{m.team_name|escapejs}}",
+  link:"{{m.meeting_link|escapejs}}",
+  desc:"{{m.description|escapejs}}",
+  can_edit:{% if m.organiser == request.user %}true{% else %}false{% endif %},
+  detail_url:"{% url 'schedule:detail' m.pk %}",
+  edit_url:"{% url 'schedule:edit' m.pk %}",
+  delete_url:"{% url 'schedule:delete' m.pk %}",
+},{% endfor %}];
+const TODAY_STR  = "{{today|date:'Y-m-d'}}";
+const CREATE_URL = "{% url 'schedule:create' %}";
+</script>
+
+<div class="sched-page">
+
+
+  <div class="sched-top">
+    <div style="font-size:1.25rem;font-weight:800;color:#111;">
+      My Schedule
+    </div>
+ 
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="action-group">
+        <button class="view-btn active" id="vbtn-upcoming" onclick="setView('upcoming')">
+          <i class="bi bi-list-ul"></i> Upcoming
+        </button>
+        <span class="btn-divider"></span>
+        <button class="view-btn" id="vbtn-week" onclick="setView('week')">
+          <i class="bi bi-calendar-week"></i> Week
+        </button>
+        <span class="btn-divider"></span>
+        <button class="view-btn" id="vbtn-month" onclick="setView('month')">
+          <i class="bi bi-calendar-month"></i> Month
+        </button>
+      </div>
+      <button class="btn-new-meeting" onclick="openCreate()">
+        <i class="bi bi-plus-lg"></i> New Meeting
+      </button>
+    </div>
+  </div>
+
+
+  <div class="sched-body">
+
+    <div class="main-panel" id="main-panel"></div>
+
+    <div class="mini-card">
+      <div class="mini-nav">
+        <button class="mini-nav-btn" onclick="miniPrev()"><i class="bi bi-chevron-left"></i></button>
+        <span class="mini-nav-title" id="mini-title"></span>
+        <button class="mini-nav-btn" onclick="miniNext()"><i class="bi bi-chevron-right"></i></button>
+      </div>
+      <div class="mini-grid">
+        <div class="mini-hdr">M</div><div class="mini-hdr">T</div><div class="mini-hdr">W</div>
+        <div class="mini-hdr">T</div><div class="mini-hdr">F</div><div class="mini-hdr">S</div><div class="mini-hdr">S</div>
+      </div>
+      <div class="mini-grid" id="mini-days"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title" id="modal-head">New Meeting</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <form method="post" id="meeting-form" novalidate>
+      {% csrf_token %}
+      <div class="fg">
+        <label>Title *</label>
+        <input type="text" name="title" id="f-title" class="form-control" placeholder="e.g. Sprint Planning" required>
+        <div class="err-msg" id="err-title"></div>
+      </div>
+      <div class="fg-row2">
+        <div class="fg">
+          <label>Team</label>
+          <input type="text" name="team_name" id="f-team" class="form-control" placeholder="Team name" list="team-list">
+          <datalist id="team-list">{% for t in teams %}<option value="{{t.name}}">{% endfor %}</datalist>
+        </div>
+        <div class="fg">
+          <label>Platform</label>
+          <select name="platform" id="f-platform" class="form-select">
+            <option value="zoom">Zoom</option>
+            <option value="teams">Microsoft Teams</option>
+            <option value="slack">Slack Huddle</option>
+            <option value="google_meet">Google Meet</option>
+            <option value="in_person">In Person</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg-row3">
+        <div class="fg">
+          <label>Date *</label>
+          <input type="date" name="date" id="f-date" class="form-control" required>
+          <div class="err-msg" id="err-date"></div>
+        </div>
+        <div class="fg">
+          <label>Start *</label>
+          <input type="time" name="start_time" id="f-start" class="form-control" required>
+          <div class="err-msg" id="err-start_time"></div>
+        </div>
+        <div class="fg">
+          <label>End *</label>
+          <input type="time" name="end_time" id="f-end" class="form-control" required>
+          <div class="err-msg" id="err-end_time"></div>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Meeting Link</label>
+        <input type="url" name="meeting_link" id="f-link" class="form-control" placeholder="https://zoom.us/j/...">
+      </div>
+      <div class="fg">
+        <label>Description / Agenda</label>
+        <textarea name="description" id="f-desc" class="form-control" rows="3" placeholder="What's this meeting about?"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn-save" id="btn-save">Create Meeting</button>
+        <button type="button" class="btn-cancel-m" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="del-overlay" onclick="if(event.target===this)closeDelModal()">
+  <div class="modal-box del-modal-box">
+    <span class="del-icon"><i class="bi bi-trash3-fill"></i></span>
+    <h5>Delete this meeting?</h5>
+    <p id="del-name" style="font-weight:700;color:#333;margin:4px 0 8px;"></p>
+    <p>This action cannot be undone.</p>
+    <form method="post" id="del-form">
+      {% csrf_token %}
+      <div class="modal-footer" style="justify-content:center;margin-top:16px;">
+        <button type="submit" class="btn-confirm-del">Delete</button>
+        <button type="button" class="btn-cancel-m" onclick="closeDelModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+
+let view     = 'upcoming';
+let viewDate = new Date(TODAY_STR + 'T00:00:00');
+let miniDate = new Date(viewDate);
+
+const toDS  = d => d.toISOString().slice(0,10);
+const parseD = s => new Date(s + 'T00:00:00');
+const fmtD   = (d,o) => d.toLocaleDateString('en-GB', o);
+const esc    = s => String(s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function meetingsOn(ds) {
+  return ALL_MEETINGS.filter(m => m.date === ds)
+                     .sort((a,b) => a.start.localeCompare(b.start));
+}
+
+
+function setView(v) {
+  view = v;
+  ['upcoming','week','month'].forEach(x =>
+    document.getElementById('vbtn-'+x).classList.toggle('active', x===v)
+  );
+  renderPanel();
+}
+
+function renderPanel() {
+  const el = document.getElementById('main-panel');
+  if      (view==='upcoming') renderUpcoming(el);
+  else if (view==='week')     renderWeek(el);
+  else                        renderMonth(el);
+}
+
+function actionBtns(m) {
+  if (!m.can_edit) return '';
+  return `<div class="mr-actions" onclick="event.stopPropagation()">
+    <button class="mr-edit-btn" title="Edit"   onclick="openEdit(${m.id})">
+      <i class="bi bi-pencil-fill"></i>
+    </button>
+    <button class="mr-del-btn"  title="Delete" onclick="openDel(${m.id})">
+      <i class="bi bi-trash-fill"></i>
+    </button>
+  </div>`;
+}
+
+function renderUpcoming(el) {
+  const todayD = parseD(TODAY_STR);
+  const future = ALL_MEETINGS
+    .filter(m => parseD(m.date) >= todayD)
+    .sort((a,b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
+
+  if (!future.length) {
+    el.innerHTML = `<div class="empty-state">
+      <i class="bi bi-calendar-x"></i>
+      <p>No upcoming meetings.<br>Hit <strong>New Meeting</strong> to schedule one.</p>
+    </div>`;
+    return;
+  }
+
+  const groups = {};
+  future.forEach(m => (groups[m.date] = groups[m.date]||[]).push(m));
+
+  let html = '';
+  for (const [ds, list] of Object.entries(groups)) {
+    const d    = parseD(ds);
+    const isTd = ds === TODAY_STR;
+    const lbl  = isTd ? 'Today' : fmtD(d, {weekday:'long', day:'numeric', month:'long'});
+    html += `<div class="day-hdr">
+      <span>${esc(lbl)}</span>
+      ${isTd ? '<span class="today-badge">Today</span>' : ''}
+      <span class="day-hdr-line"></span>
+    </div>`;
+    for (const m of list) {
+      html += `<div class="meeting-row">
+        <div class="mr-date" onclick="location='${m.detail_url}'" style="cursor:pointer">
+          <div class="md-day">${d.getDate()}</div>
+          <div class="md-mon">${fmtD(d,{month:'short'})}</div>
+        </div>
+        <div class="mr-info" onclick="location='${m.detail_url}'">
+          <div class="mr-title">${esc(m.title)}</div>
+          <div class="mr-meta">
+            <i class="bi bi-clock"></i>${m.start}–${m.end}
+            ${m.team ? `<i class="bi bi-people"></i>${esc(m.team)}` : ''}
+            ${m.link ? `<a href="${esc(m.link)}" target="_blank"
+              onclick="event.stopPropagation()"
+              style="color:#4f46e5;text-decoration:none;">
+              <i class="bi bi-link-45deg"></i>Join</a>` : ''}
+          </div>
+        </div>
+        <span class="plat-chip plat-${m.platform}">${esc(m.plat_label)}</span>
+        ${actionBtns(m)}
+      </div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+function weekStart(d) {
+  const dt = new Date(d), dow = dt.getDay();
+  dt.setDate(dt.getDate() - (dow===0 ? 6 : dow-1));
+  return dt;
+}
+
+function renderWeek(el) {
+  const ws   = weekStart(viewDate);
+  const we   = new Date(ws); we.setDate(ws.getDate()+6);
+  const days = Array.from({length:7}, (_,i) => {
+    const d = new Date(ws); d.setDate(ws.getDate()+i); return d;
+  });
+  const hours = Array.from({length:16}, (_,i) => i+7); 
+
+  let html = `<div class="panel-nav">
+    <button class="pnav-btn pnav-arr" onclick="weekPrev()"><i class="bi bi-chevron-left"></i></button>
+    <span class="panel-nav-title">
+      ${fmtD(ws,{day:'numeric',month:'short'})} – ${fmtD(we,{day:'numeric',month:'short',year:'numeric'})}
+    </span>
+    <div style="display:flex;gap:5px;">
+      <button class="pnav-btn pnav-today" onclick="viewDate=parseD(TODAY_STR);renderPanel()">Today</button>
+      <button class="pnav-btn pnav-arr" onclick="weekNext()"><i class="bi bi-chevron-right"></i></button>
+    </div>
+  </div>
+  <div class="week-scroll"><div class="week-table">
+    <div class="wt-time-col"><div class="wt-time-hdr"></div>`;
+  hours.forEach(h => { html += `<div class="wt-time-slot">${String(h).padStart(2,'0')}:00</div>`; });
+  html += `</div>`;
+
+  days.forEach(day => {
+    const ds   = toDS(day);
+    const isTd = ds === TODAY_STR;
+    const mlist = meetingsOn(ds);
+    html += `<div class="wt-day-col">
+      <div class="wt-day-hdr${isTd?' is-today':''}">
+        <div class="wt-day-name">${fmtD(day,{weekday:'short'})}</div>
+        <div class="wt-day-num">${day.getDate()}</div>
+      </div>`;
+    hours.forEach(h => {
+      html += `<div class="wt-slot" onclick="openCreate('${ds}')">`;
+      mlist.filter(m => parseInt(m.start) === h).forEach(m => {
+        const sm  = parseInt(m.start.split(':')[1]);
+        const eh  = parseInt(m.end.split(':')[0]);
+        const em  = parseInt(m.end.split(':')[1]);
+        const dur = (eh + em/60) - (h + sm/60);
+        html += `<div class="wt-event"
+          style="top:${(sm/60*100)}%;height:${Math.max(18, dur*48)}px;"
+          onclick="event.stopPropagation();location='${m.detail_url}'"
+          title="${esc(m.title)} ${m.start}–${m.end}">
+          ${m.start} ${esc(m.title)}
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+  html += `</div></div>`;
+  el.innerHTML = html;
+}
+function weekPrev() { viewDate.setDate(viewDate.getDate()-7); renderPanel(); }
+function weekNext() { viewDate.setDate(viewDate.getDate()+7); renderPanel(); }
+
+
+function renderMonth(el) {
+  const yr = viewDate.getFullYear(), mo = viewDate.getMonth();
+  let start = new Date(yr, mo, 1);
+  const sd  = start.getDay(); start.setDate(start.getDate() - (sd===0?6:sd-1));
+  let end   = new Date(yr, mo+1, 0);
+  const ed  = end.getDay(); if (ed!==0) end.setDate(end.getDate()+(7-ed));
+  const label = viewDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+
+  let html = `<div class="panel-nav">
+    <button class="pnav-btn pnav-arr" onclick="monthPrev()"><i class="bi bi-chevron-left"></i></button>
+    <span class="panel-nav-title">${label}</span>
+    <div style="display:flex;gap:5px;">
+      <button class="pnav-btn pnav-today" onclick="viewDate=parseD(TODAY_STR);renderPanel()">Today</button>
+      <button class="pnav-btn pnav-arr" onclick="monthNext()"><i class="bi bi-chevron-right"></i></button>
+    </div>
+  </div>
+  <div class="month-wrap"><div class="month-grid">
+    <div class="mg-hdr">Mon</div><div class="mg-hdr">Tue</div><div class="mg-hdr">Wed</div>
+    <div class="mg-hdr">Thu</div><div class="mg-hdr">Fri</div><div class="mg-hdr">Sat</div><div class="mg-hdr">Sun</div>`;
+
+  const cur = new Date(start);
+  while (cur <= end) {
+    const ds     = toDS(cur);
+    const otherM = cur.getMonth() !== mo;
+    const isTd   = ds === TODAY_STR;
+    const mlist  = meetingsOn(ds);
+    html += `<div class="mg-cell${otherM?' other-m':''}${isTd?' is-today':''}" onclick="openCreate('${ds}')">
+      <div class="mg-date">${cur.getDate()}</div>`;
+    mlist.slice(0,3).forEach(m => {
+      html += `<div class="mg-event"
+        onclick="event.stopPropagation();location='${m.detail_url}'"
+        title="${esc(m.title)}">${m.start} ${esc(m.title)}</div>`;
+    });
+    if (mlist.length > 3) html += `<div class="mg-more">+${mlist.length-3} more</div>`;
+    html += `</div>`;
+    cur.setDate(cur.getDate()+1);
+  }
+  html += `</div></div>`;
+  el.innerHTML = html;
+}
+function monthPrev() { viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1); renderPanel(); }
+function monthNext() { viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1); renderPanel(); }
+
+
+function renderMini() {
+  const yr = miniDate.getFullYear(), mo = miniDate.getMonth();
+  document.getElementById('mini-title').textContent =
+    miniDate.toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+
+  let start = new Date(yr, mo, 1);
+  const sd  = start.getDay(); start.setDate(start.getDate()-(sd===0?6:sd-1));
+  let end   = new Date(yr, mo+1, 0);
+  const ed  = end.getDay(); if(ed!==0) end.setDate(end.getDate()+(7-ed));
+
+  const cont = document.getElementById('mini-days');
+  cont.innerHTML = '';
+  const cur = new Date(start);
+  while (cur <= end) {
+    const ds  = toDS(cur);
+    const div = document.createElement('div');
+    div.className = 'mini-cell';
+    if (cur.getMonth() !== mo) div.classList.add('other-m');
+    if (ds === TODAY_STR)      div.classList.add('is-today');
+    if (meetingsOn(ds).length) div.classList.add('has-dot');
+    div.textContent = cur.getDate();
+    const d2 = new Date(cur);
+    div.onclick = () => {
+      viewDate = d2; miniDate = new Date(d2);
+      if (view==='upcoming') setView('week');
+      else { renderPanel(); renderMini(); }
+    };
+    cont.appendChild(div);
+    cur.setDate(cur.getDate()+1);
+  }
+}
+function miniPrev() { miniDate = new Date(miniDate.getFullYear(), miniDate.getMonth()-1, 1); renderMini(); }
+function miniNext() { miniDate = new Date(miniDate.getFullYear(), miniDate.getMonth()+1, 1); renderMini(); }
+
+
+function openCreate(prefillDate) {
+  document.getElementById('modal-head').textContent = 'New Meeting';
+  document.getElementById('btn-save').textContent   = 'Create Meeting';
+  document.getElementById('meeting-form').action    = CREATE_URL;
+  document.getElementById('f-title').value    = '';
+  document.getElementById('f-team').value     = '';
+  document.getElementById('f-platform').value = 'zoom';
+  document.getElementById('f-date').value     = prefillDate || TODAY_STR;
+  document.getElementById('f-start').value    = '';
+  document.getElementById('f-end').value      = '';
+  document.getElementById('f-link').value     = '';
+  document.getElementById('f-desc').value     = '';
+  clearErrs();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-title').focus(), 50);
+}
+
+function openEdit(id) {
+  const m = ALL_MEETINGS.find(x => x.id===id); if (!m) return;
+  document.getElementById('modal-head').textContent = 'Edit Meeting';
+  document.getElementById('btn-save').textContent   = 'Save Changes';
+  document.getElementById('meeting-form').action    = m.edit_url;
+  document.getElementById('f-title').value    = m.title;
+  document.getElementById('f-team').value     = m.team;
+  document.getElementById('f-platform').value = m.platform;
+  document.getElementById('f-date').value     = m.date;
+  document.getElementById('f-start').value    = m.start;
+  document.getElementById('f-end').value      = m.end;
+  document.getElementById('f-link').value     = m.link;
+  document.getElementById('f-desc').value     = m.desc;
+  clearErrs();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-title').focus(), 50);
+}
+
+function openDel(id) {
+  const m = ALL_MEETINGS.find(x => x.id===id); if (!m) return;
+  document.getElementById('del-name').textContent = m.title;
+  document.getElementById('del-form').action      = m.delete_url;
+  document.getElementById('del-overlay').classList.add('open');
+}
+
+function closeModal()    { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeDelModal() { document.getElementById('del-overlay').classList.remove('open'); }
+function clearErrs()     { document.querySelectorAll('.err-msg').forEach(e => e.textContent=''); }
+
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { closeModal(); closeDelModal(); }
+  if (e.key==='n' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))
+    openCreate();
+});
+
+
+{% if form_errors %}
+openCreate();
+{% for field, errors in form_errors.items %}{% for error in errors %}
+document.getElementById('err-{{field}}').textContent = "{{error|escapejs}}";
+{% endfor %}{% endfor %}
+{% endif %}
+{% if nfe %}
+openCreate();
+document.getElementById('err-end_time').textContent = "{{nfe|escapejs}}";
+{% endif %}
+
+
+renderMini();
+renderPanel();
+</script>
+{% endblock %}

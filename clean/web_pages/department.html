@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Departments{% endblock %}
+{% block header %}Departments{% endblock %}
+
+{% block content %}
+
+<style>
+
+    .page-header {
+        margin-bottom: 20px;
+    }
+
+
+    .search-box {
+        max-width: 400px;
+        margin-bottom: 20px;
+    }
+
+    .department-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+
+    .department-card {
+        flex: 1 1 260px;
+        max-width: 300px;
+
+        border-radius: 16px;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: 0.25s;
+
+        padding: 15px;
+    }
+
+
+    .department-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+    }
+
+
+    .department-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .department-head {
+        font-size: 13px;
+        color: #555;
+    }
+</style>
+<!-- header -->
+
+<div class="page-header">
+    <h4>All Department Information</h4>
+</div>
+
+<!-- search bar -->
+<div class="search-box">
+<!--it will retrive he information -->
+    <form method="GET" class="d-flex gap-2">
+
+        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control"
+            placeholder="Search departments...">
+
+        <button type="submit" class="btn btn-primary">
+            Search
+        </button>
+
+
+
+
+    </form>
+    <a href="{% url 'departments' %}" class="btn btn-secondary mt-2">
+        Show All
+    </a>
+
+</div>
+
+<!-- the cards-->
+<div class="department-grid">
+
+    {% for d in departments %}
+
+    <div class="department-card">
+
+        <div class="department-title">
+            {{ d.department_name }}
+        </div>
+
+        <p class="text-muted small">
+            {{ d.department_description|default:"No description available" }}
+        </p>
+
+        <div class="department-head">
+            <b>Head:</b> {{ d.department_head }}
+        </div>
+
+    </div>
+   <!--if deparment is not found-->
+    {% empty %}
+    <p>No departments found</p>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

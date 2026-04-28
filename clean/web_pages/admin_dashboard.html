@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+
+
+<!--header-->
+<div class="p-3 d-flex justify-content-between align-items-center">
+  <h4>Admin Dashboard</h4>
+
+  <div>
+    <button class="btn btn-primary btn-sm" onclick="setGrid()">Grid</button>
+    <button class="btn btn-secondary btn-sm" onclick="setList()">List</button>
+  </div>
+</div>
+
+<!--admin button-->
+<div class="container-fluid px-3 mb-3">
+
+  <div class="d-flex gap-2 flex-wrap">
+
+    <a href="#" class="btn btn-success btn-sm">➕ Add Team</a>
+
+    <a href="#" class="btn btn-success btn-sm">➕ Add Department</a>
+
+    <a href="{% url 'departments' %}" class="btn btn-dark btn-sm">
+      📂 
+    </a>
+
+  </div>
+
+</div>
+
+<!--content-->
+<div class="container-fluid p-3">
+
+  <!--teams-->
+  <h5 class="mb-3">Teams</h5>
+
+  <div id="cardContainer" class="d-flex flex-wrap gap-3 grid-view">
+
+    {% for team in teams %}
+      <div class="card card-item p-3">
+        <h5>{{ team.team_name }}</h5>
+        <p>{{ team.team_description|default:"No description" }}</p>
+        <small><b>Status:</b> {{ team.team_status }}</small>
+      </div>
+    {% empty %}
+      <p>No teams found</p>
+    {% endfor %}
+
+  </div>
+
+  <!--staff-->
+  <h5 class="mt-4 mb-3">Staff</h5>
+
+  <div class="d-flex flex-wrap gap-3">
+
+    {% for s in staff_list %}
+      <div class="card card-item p-3">
+        <h5>{{ s.first_name }} {{ s.last_name }}</h5>
+        <p>{{ s.staff_role|default:"Staff Member" }}</p>
+      </div>
+    {% empty %}
+      <p>No staff found</p>
+    {% endfor %}
+
+  </div>
+
+</div>
+
+<script>
+
+function setList(){
+  document.getElementById("cardContainer").classList.remove("grid-view");
+  document.getElementById("cardContainer").classList.add("list-view");
+}
+
+function setGrid(){
+  document.getElementById("cardContainer").classList.remove("list-view");
+  document.getElementById("cardContainer").classList.add("grid-view");
+}
+
+</script>
+
+{% endblock %}
