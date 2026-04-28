@@ -51,3 +51,28 @@ class Department(models.Model):
 
     class Meta:
         db_table = "Department"
+        
+class Message(models.Model):
+    # Uses their custom User model instead of Django's built-in one
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='sent_messages',
+        db_column='sender_id'
+    )
+    receiver = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='received_messages',
+        db_column='receiver_id'
+    )
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "Message"
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.sender.email} → {self.receiver.email}: {self.content[:40]}"

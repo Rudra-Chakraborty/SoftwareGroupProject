@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Compose{% endblock %}
+{% block header %}Team Messages{% endblock %}
+
+{% block content %}
+
+<div class="d-flex gap-2 mb-4">
+  <a href="/messages/" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-inbox me-1"></i>Inbox
+  </a>
+  <a href="/messages/outbox/" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-send me-1"></i>Outbox
+  </a>
+  <a href="/messages/compose/" class="btn btn-primary btn-sm">
+    <i class="bi bi-pencil-square me-1"></i>Compose
+  </a>
+</div>
+
+<h5 class="mb-3 fw-semibold">New Message</h5>
+
+<div style="background:#fff; border-radius:16px; padding:30px; max-width:600px; box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label fw-semibold">To</label>
+      <select name="receiver" class="form-select" required>
+        <option value="">Select a user...</option>
+        {% for user in all_users %}
+          <option value="{{ user.user_Id }}">{{ user.email }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Message</label>
+      <textarea name="content" class="form-control" rows="4" placeholder="Write your message..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-send me-2"></i>Send
+    </button>
+    <a href="/dashboard/" class="btn btn-outline-secondary ms-2">Cancel</a>
+  </form>
+</div>
+
+{% endblock %}
