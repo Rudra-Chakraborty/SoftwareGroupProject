@@ -16,4 +16,5 @@ urlpatterns = [
     path('departments/<int:pk>/', team_views.department_detail, name='department_detail'),
     path('dependencies/', team_views.dependency_list, name='dependencies'),
     path('schedule/', include('meetings.urls', namespace='schedule')),
+    path('reports/', include('reports.urls', namespace='reports')),
 ]
