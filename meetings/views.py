@@ -1,7 +1,7 @@
 # Author: Student 4
 # Module: Schedule
 # Description: Views for monthly calendar, weekly view, upcoming meetings,
-#              and create/edit/delete operations on meetings.
+# and create/edit/delete operations on meetings.
 
 import calendar
 from datetime import date, timedelta
