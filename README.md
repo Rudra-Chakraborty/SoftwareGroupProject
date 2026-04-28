@@ -66,8 +66,3 @@ Then open http://127.0.0.1:8000 in your browser.
 
 Pages
 URLWhat it does/Login/dashboard/Home/profile/Staff profile/messages/Inbox/messages/outbox/Outbox/messages/compose/Compose/teams/All teams/teams/dependencies/Dependency map/teams/departments/Departments/meetings/Schedule/reports/Analytics dashboard/reports/pdf/Download PDF/reports/excel/Download Excel/admin/Django admin
-
-A few things worth knowing
-The database is SQLite and a db.sqlite3 file is included with seed data already loaded. If you want a clean slate delete it and run migrate and seed_student1 again.
-DEBUG = True in settings which is fine for running it locally. The secret key in settings is just a placeholder — change it before putting this anywhere public.
-The export buttons on the reports page need reportlab and openpyxl installed. Running python manage.py install_packages handles that automatically.
