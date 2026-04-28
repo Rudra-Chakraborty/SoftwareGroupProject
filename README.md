@@ -3,14 +3,19 @@ SkyTrack is a team management and coordination web app built with Django as a gr
 The project was split across five students, each owning a module, then integrated into a single codebase at the end.
 
 What we built
+
 Authentication & core (Student 2)
 Login and session management using a custom User model rather than Django's built-in one. Staff profiles are stored separately in a Staff table linked to the user. A custom middleware (GroupSessionToDjangoAuthMiddleware) bridges the group session with Django's auth system so that the different modules can all check login state consistently without rewriting each other's code.
+
 Teams & departments (Student 1)
 The main organisational layer. Teams belong to departments, have managers, skills, contact info, and can depend on other teams (upstream/downstream dependencies). The dependency view lets you see the full chain of which teams rely on which. There's also a seed command (python manage.py seed_student1) that loads real team data from the organisation registry into the database.
+
 Messaging (Student 3)
 Internal messaging between staff members. Users have an inbox, outbox, and compose page. Messages are stored with sender/receiver references to the custom User model and ordered by timestamp.
+
 Schedule (Student 4)
 A personal meeting scheduler built as its own Django app. The schedule page has three views — upcoming list, week grid, and month calendar — all on one page without any page reloads. You can create, edit, and delete meetings through a modal form. Created meetings show up immediately in the upcoming list and on the calendar. The mini calendar on the right shows dots on days that have meetings.
+
 Reports (Student 5)
 A dashboard pulling stats across the whole organisation — total departments, teams, members, and inactive teams. Charts are rendered in the browser using Chart.js. The page also supports exporting the full data as a PDF or as a multi-sheet Excel file with a bar chart included in the Excel output.
 
