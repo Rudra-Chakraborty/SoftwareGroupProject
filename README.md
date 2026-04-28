@@ -1,4 +1,4 @@
-//SkyTrack
+# SkyTrack
 SkyTrack is a team management and coordination web app built with Django as a group university project. It lets staff log in, view their organisation's teams and departments, send internal messages, schedule meetings, and pull reports — all in one place.
 The project was split across five students, each owning a module, then integrated into a single codebase at the end.
 
